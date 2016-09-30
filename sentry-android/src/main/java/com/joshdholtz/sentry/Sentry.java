@@ -41,7 +41,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.Socket;
 import java.net.URI;
@@ -517,6 +520,8 @@ public class Sentry {
             // Here you should have a more robust, permanent record of problems
             SentryEventBuilder builder = new SentryEventBuilder(e, SentryEventLevel.FATAL);
             builder.setRelease(Integer.toString(sentry.appInfo.versionCode));
+            // 将错误信息放到message中
+            builder.setMessage(getErrorInfo(e));
 
             if (sentry.captureListener != null) {
                 builder = sentry.captureListener.beforeCapture(builder);
@@ -1062,6 +1067,8 @@ public class Sentry {
                 Log.e(TAG, "Error serializing stack frames", e);
             }
 
+            Map<String, String> stack = new HashMap<>();
+
             return stacktrace;
         }
 
@@ -1244,5 +1251,19 @@ public class Sentry {
      */
     private static boolean Present(String s) {
         return s != null && s.length() > 0;
+    }
+
+    /**
+     * 获取错误的信息
+     * @param arg1
+     * @return
+     */
+    public static String getErrorInfo(Throwable arg1) {
+        Writer writer = new StringWriter();
+        PrintWriter pw = new PrintWriter(writer);
+        arg1.printStackTrace(pw);
+        pw.close();
+        String error= writer.toString();
+        return error;
     }
 }
